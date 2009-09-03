@@ -1,0 +1,28 @@
+Hi!
+
+I was sick one day of having to do extensive testing for my running daemons in a flexible way.
+
+Therefore i wrote this small program.
+
+Hope you have fun with it.
+
+usage:
+  svz <if-stmt> [-do <do-stmt> [-else <else-stmt>]]
+
+  This is the grammar:
+  
+    if-stmt   := stmt
+    do-stmt   := stmt
+    else-stmt := stmt
+
+    stmt := { stmt }
+    stmt |= stmt -and stmt
+    stmt |= stmt -or stmt
+    stmt |= -pid <argument>
+      TRUE if <argument> is an existing pid, otherwise FALSE
+    
+    stmt |= -echo <argument> [<argument 2> [..]]
+      Echoes all arguments, is always TRUE.
+
+    stmt |= -exec <path> [<argument> [<argument 2> [..]]]
+      Executes <path> with argument list. Is TRUE if execution returns status 0, otherwise FALSE.
