@@ -52,11 +52,13 @@ print_help(void)
   puts("  stmt |= -pid <argument>");
   puts("    TRUE if <argument> is an existing pid, otherwise FALSE");
   puts("");
-  puts("  stmt |= -echo <argument> [<argument 2> [..]]");
+  puts("  stmt |= -echo argv $");
   puts("    Echoes all arguments, is always TRUE.");
   puts("");
-  puts("  stmt |= -exec <path> [<argument> [<argument 2> [..]]]");
+  puts("  stmt |= -exec argv $");
   puts("    Executes <path> with argument list. Is TRUE if execution returns status 0, otherwise FALSE.");
+  puts("");
+  puts("  argv |= ARGUMENT [ARGUMENT [..]]");
   puts("");
 }
 
@@ -143,7 +145,7 @@ yylex(YYSTYPE *lvalp)
         coRETURN(ARGUMENT);
       }
       
-      coRETURN('$');
+      coRETURN(ARGEND);
       continue;
     }
     
@@ -176,31 +178,25 @@ yylex(YYSTYPE *lvalp)
         coRETURN(ARGUMENT);
       }
       
-      coRETURN('$');
+      coRETURN(ARGEND);
       continue;
     }
     
-    if (strcmp(argument, "$") == 0)
-    {
-      coRETURN('$');
-      continue;
-    }
-
     if (strcmp(argument, "-or") == 0)
     {
-      coRETURN('|');
+      coRETURN(OR);
       continue;
     }
 
     if (strcmp(argument, "!") == 0 || strcmp(argument, "-not") == 0)
     {
-      coRETURN('!');
+      coRETURN(NOT);
       continue;
     }
     
     if (strcmp(argument, "-and") == 0)
     {
-      coRETURN('&');
+      coRETURN(AND);
       continue;
     }
     
