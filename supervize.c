@@ -37,7 +37,7 @@ void
 print_help(void)
 {
   puts("");
-  puts("svz <if-stmt> [-do <do-stmt> [-else <else-stmt>]]");
+  puts("svz <if-stmt> [-do <do-stmt>] [-else <else-stmt>]");
   puts("");
   puts("This is the grammar:");
   puts("");
@@ -110,7 +110,7 @@ yylex(YYSTYPE *lvalp)
 {
   char *argument;
   coBEGIN;
-
+  
   while (1)
   {
     argument = g_argv[g_index++];

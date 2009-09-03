@@ -14,14 +14,14 @@
   int array;
 }
 
-%token BEGIN END ECHO EXEC PID WHEN DO ELSE AND OR NOT ARGEND
+%token ECHO EXEC PID WHEN DO ELSE AND OR NOT ARGEND
 %token <string> ARGUMENT
 %type <proc> pid_stmt exec_stmt echo_stmt stmt
 %type <array> argv
 
-%left '&'
-%left '|'
-%left '!'
+%left AND
+%left OR
+%left NOT
 
 %% /* Grammar rules and actions follow */
 exp: stmt DO stmt ELSE stmt {sv_root(g_cs, proc_run(g_cs, $1), $3, $5);}

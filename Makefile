@@ -6,7 +6,7 @@ all: parser.tab.c stack.c
 parser: parser.tab.c
 
 parser.tab.c: parser.y
-	bison --defines=parser.tab.h $<
+	bison --verbose --defines=parser.tab.h $<
 
 clean:
 	$(RM) parser.tab.c
