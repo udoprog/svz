@@ -37,8 +37,8 @@ stmt: '!' stmt      {$$ = proc_append(g_cs, sv_stmt_not, 1, $2);}
     | stmt '|' stmt {$$ = proc_append(g_cs, sv_stmt_or, 2, $1, $3);}
 ;
 
-exec_stmt:  EXEC argv     {$$ = proc_append(g_cs, sv_exec, 1, $2);}
-echo_stmt:  ECHO argv     {$$ = proc_append(g_cs, sv_echo, 1, $2);}
+exec_stmt:  EXEC argv '$' {$$ = proc_append(g_cs, sv_exec, 1, $2);}
+echo_stmt:  ECHO argv '$' {$$ = proc_append(g_cs, sv_echo, 1, $2);}
 pid_stmt:   PID ARGUMENT  {$$ = proc_append(g_cs, sv_pid, 1, $2);}
 
 argv: ARGUMENT            { $$ = array_create(g_cs);

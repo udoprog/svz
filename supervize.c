@@ -16,6 +16,7 @@
 
 #define YYACCEPT 0
 #define YYABORT 1
+#define YYERROR -1
 #define COMMAND_MAX 1024
 
 char *program_name;
@@ -45,6 +46,7 @@ print_help(void)
   puts("  else-stmt := stmt");
   puts("");
   puts("  stmt := { stmt }");
+  puts("  stmt |= <-not|!> stmt");
   puts("  stmt |= stmt -and stmt");
   puts("  stmt |= stmt -or stmt");
   puts("  stmt |= -pid <argument>");
@@ -97,73 +99,142 @@ fork_exec(int argc, char *argv[])
   return status == 0 ? TRUE : FALSE;
 }
 
+#define coBEGIN     static int state = 0; switch (state) { case 0:
+#define coRETURN(v) { state = __LINE__; return v; case __LINE__:; } while(0);
+#define coEND       }
+
 int
 yylex(YYSTYPE *lvalp)
 {
-  char *argument = g_argv[g_index++];
-  
-  if (argument == NULL)
-  {
-    return YYACCEPT;
-  }
-  
-  if (strcmp(argument, "-exec") == 0)
-  {
-    return EXEC;
-  }
-  
-  if (strcmp(argument, "-pid") == 0)
-  {
-    return PID;
-  }
-  
-  if (strcmp(argument, "-echo") == 0)
-  {
-    return ECHO;
-  }
-  
-  if (strcmp(argument, "$") == 0)
-  {
-    return '$';
-  }
+  char *argument;
+  coBEGIN;
 
-  if (strcmp(argument, "-or") == 0)
+  while (1)
   {
-    return '|';
-  }
+    argument = g_argv[g_index++];
+    
+    if (argument == NULL)
+    {
+      coRETURN(YYACCEPT);
+      break;
+    }
+    
+    if (strcmp(argument, "-exec") == 0)
+    {
+      /* execute statement mode, everything is swallowed until $ is reached */
+      coRETURN(EXEC);
 
-  if (strcmp(argument, "!") == 0 || strcmp(argument, "not") == 0)
-  {
-    return '!';
-  }
-  
-  if (strcmp(argument, "-and") == 0)
-  {
-    return '&';
-  }
-  
-  if (strcmp(argument, "{") == 0)
-  {
-    return '{';
-  }
+      while (1)
+      {
+        argument = g_argv[g_index++];
+        
+        if (argument == NULL)
+        {
+          coRETURN(YYERROR);
+          break;
+        }
+        
+        if (strcmp("$", argument) == 0)
+        {
+          break;
+        }
+        
+        (*lvalp).string = string_append(g_cs, argument);
+        coRETURN(ARGUMENT);
+      }
+      
+      coRETURN('$');
+      continue;
+    }
+    
+    if (strcmp(argument, "-pid") == 0)
+    {
+      coRETURN(PID);
+      continue;
+    }
+    
+    if (strcmp(argument, "-echo") == 0)
+    {
+      coRETURN(ECHO);
 
-  if (strcmp(argument, "}") == 0)
-  {
-    return '}';
+      while (1)
+      {
+        argument = g_argv[g_index++];
+        
+        if (argument == NULL)
+        {
+          coRETURN(YYERROR);
+          break;
+        }
+        
+        if (strcmp("$", argument) == 0)
+        {
+          break;
+        }
+        
+        (*lvalp).string = string_append(g_cs, argument);
+        coRETURN(ARGUMENT);
+      }
+      
+      coRETURN('$');
+      continue;
+    }
+    
+    if (strcmp(argument, "$") == 0)
+    {
+      coRETURN('$');
+      continue;
+    }
+
+    if (strcmp(argument, "-or") == 0)
+    {
+      coRETURN('|');
+      continue;
+    }
+
+    if (strcmp(argument, "!") == 0 || strcmp(argument, "-not") == 0)
+    {
+      coRETURN('!');
+      continue;
+    }
+    
+    if (strcmp(argument, "-and") == 0)
+    {
+      coRETURN('&');
+      continue;
+    }
+    
+    if (strcmp(argument, "{") == 0)
+    {
+      coRETURN('{');
+      continue;
+    }
+
+    if (strcmp(argument, "}") == 0)
+    {
+      coRETURN('}');
+      continue;
+    }
+    
+    if (strcmp(argument, "-do") == 0)
+    {
+      coRETURN(DO);
+      continue;
+    }
+    
+    if (strcmp(argument, "-else") == 0)
+    {
+      coRETURN(ELSE);
+      continue;
+    }
+    
+    (*lvalp).string = string_append(g_cs, argument);
+    coRETURN(ARGUMENT);
   }
   
-  if (strcmp(argument, "-do") == 0)
-  {
-    return DO;
-  }
-  
-  if (strcmp(argument, "-else") == 0)
-  {
-    return ELSE;
-  }
-  
-  (*lvalp).string = string_append(g_cs, argument);
-  return ARGUMENT;
+  coEND;
+  fprintf(stderr, "Lexer called after YYACCEPT\n");
+  return YYERROR;
 }
 
 void
