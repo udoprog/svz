@@ -85,8 +85,8 @@ fork_exec(int argc, char *argv[])
       /*
        * able to execute other program.
        */
-      execv(argv[0], argv);
-      printf("unable to spawn child: %s\n", strerror(errno));
+      execvp(argv[0], argv);
+      fprintf(stderr, "Unable to fork child: %s - %s\n", argv[0], strerror(errno));
       // get here when unable to exec.
       exit(1);
       break;
