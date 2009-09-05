@@ -3,8 +3,10 @@
 
 typedef struct {
   void *func;
-  int argc;
   char *name;
+  int argc;
 } frun_option;
+
+frun_option *frun_get(frun_option *options, const char *name);
 
 #endif /* _FRUN_H_ */

@@ -5,22 +5,23 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include "frun.h"
 
-void *frun_get(frun_option options[], const char *name)
+frun_option *frun_get(frun_option *options, const char *name)
 {
   int i = 0;
-  frun_option func = options[i];
+  frun_option *func = options;
   
-  while (func.func != NULL)
+  while (func->func != NULL)
   {
-    if (strcmp(func.name, name) == 0)
+    if (strcmp(func->name, name) == 0)
     {
-      return func.func;
+      return func;
     }
     
-    func = options[i++];
+    func = ++options;
   }
   
   return NULL;

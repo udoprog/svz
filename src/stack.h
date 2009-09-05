@@ -31,6 +31,9 @@ typedef struct callspace {
   array *arrays;
   int a_pos;
   int a_alloc;
+  
+  /* nice place to store application specific global variables. */
+  void *global;
 } callspace;
 
 typedef struct procedure {

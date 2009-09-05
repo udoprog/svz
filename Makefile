@@ -1,8 +1,8 @@
 GCC=gcc
 TESTV=valgrind
 
-all: parser.tab.c stack.c
-	$(GCC) -g parser.tab.c frun.c stack.c supervize.c -o svz
+all: parser.tab.c
+	$(GCC) -g -I./src parser.tab.c src/libs/core.c src/lexer.c src/frun.c src/stack.c src/supervize.c -o svz
 
 parser: parser.tab.c
 

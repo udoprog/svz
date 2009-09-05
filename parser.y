@@ -38,12 +38,14 @@ stmt: NOT stmt      {$$ = proc_append(g_cs, sv_stmt_not, 1, $2);}
 ;
 
 run_stmt: ARGUMENT argv ARGEND {
-  int (*func)(callspace *, int*);
-  func = (int (*)(callspace *, int*))frun_get(g_functions, string_get(g_cs, $1));
+  frun_option *func;
+  globals *global = (globals *)g_cs->global;
+  
+  func = frun_get(global->functions, string_get(g_cs, $1));
   
   if (func != NULL)
   {
-    $$ = proc_append(g_cs, func, 1, $2);
+    $$ = proc_append(g_cs, func->func, 1, $2);
   }
   else
   {
@@ -51,10 +53,6 @@ run_stmt: ARGUMENT argv ARGEND {
     exit(1);
   }
 }
-//exec_stmt:  EXEC argv ARGEND  {$$ = proc_append(g_cs, sv_exec, 1, $2);}
-//exec_stmt:  SPAWN argv ARGEND {$$ = proc_append(g_cs, sv_spawn, 1, $2);}
-//echo_stmt:  ECHO argv ARGEND  {$$ = proc_append(g_cs, sv_echo, 1, $2);}
-//pid_stmt:   PID ARGUMENT      {$$ = proc_append(g_cs, sv_pid, 1, $2);}
 
 argv: ARGUMENT                { $$ = array_create(g_cs);
                                 array_append(g_cs, $$, $1); }

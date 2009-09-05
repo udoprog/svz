@@ -1,2 +1,4 @@
-Sat Sep  5 16:45:50 CEST 2009
+Sat Sep  5 CEST 2009
  - added dynamic function system (frun)
+ - fixed proper module reading (inspiration from php).
+ - fixed parsing from stdin.
