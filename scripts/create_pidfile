@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# very simple, writes second argument to a file named the same as the first argument.
+#
+
+test $# -ne 2 && exit 1
+
+echo $2 > $1
+
+exit 0

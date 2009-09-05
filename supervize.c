@@ -10,6 +10,7 @@
 
 #include "parser.tab.h"
 #include "stack.h"
+#include "frun.h"
 #include "supervize.h"
 
 #define dprintf(...)
@@ -18,6 +19,21 @@
 #define YYABORT 1
 #define YYERROR -1
 #define COMMAND_MAX 1024
+
+int sv_exec(callspace*, int argv[]);
+int sv_spawn(callspace*, int argv[]);
+int sv_echo(callspace*, int argv[]);
+int sv_pid(callspace*, int argv[]);
+int sv_pidto(callspace*, int argv[]);
+
+frun_option g_functions[] = {
+  {.func = sv_exec, .name = "exec", .argc = 1},
+  {.func = sv_spawn, .name = "spawn", .argc = 1},
+  {.func = sv_echo, .name = "echo", .argc = 1},
+  {.func = sv_pid, .name = "pid", .argc = 1},
+  {.func = sv_pidto, .name = "pidto", .argc = 1},
+  {.func = NULL}
+};
 
 char *program_name;
 char *argument;
@@ -98,7 +114,41 @@ fork_exec(int argc, char *argv[])
   
   int status;
   waitpid(childpid, &status, 0);
+  
+  if (childpid > 0)
+  {
+    g_last_pid = childpid;
+    sprintf(g_last_pid_str, "%d", g_last_pid);
+  }
+  
   return status == 0 ? TRUE : FALSE;
+}
+
+int
+fork_spawn(int argc, char *argv[])
+{
+  int childpid = fork();
+  
+  switch (childpid)
+  {
+    case 0:
+      /*
+       * able to execute other program.
+       */
+      execvp(argv[0], argv);
+      fprintf(stderr, "Unable to fork child: %s - %s\n", argv[0], strerror(errno));
+      // get here when unable to exec.
+      exit(1);
+      break;
+  }
+  
+  if (childpid > 0)
+  {
+    g_last_pid = childpid;
+    sprintf(g_last_pid_str, "%d", g_last_pid);
+  }
+  
+  return TRUE;
 }
 
 #define coBEGIN     static int state = 0; switch (state) { case 0:
@@ -119,67 +169,6 @@ yylex(YYSTYPE *lvalp)
     {
       coRETURN(YYACCEPT);
       break;
-    }
-    
-    if (strcmp(argument, "-exec") == 0)
-    {
-      /* execute statement mode, everything is swallowed until $ is reached */
-      coRETURN(EXEC);
-
-      while (1)
-      {
-        argument = g_argv[g_index++];
-        
-        if (argument == NULL)
-        {
-          coRETURN(YYERROR);
-          break;
-        }
-        
-        if (strcmp("$", argument) == 0)
-        {
-          break;
-        }
-        
-        (*lvalp).string = string_append(g_cs, argument);
-        coRETURN(ARGUMENT);
-      }
-      
-      coRETURN(ARGEND);
-      continue;
-    }
-    
-    if (strcmp(argument, "-pid") == 0)
-    {
-      coRETURN(PID);
-      continue;
-    }
-    
-    if (strcmp(argument, "-echo") == 0)
-    {
-      coRETURN(ECHO);
-
-      while (1)
-      {
-        argument = g_argv[g_index++];
-        
-        if (argument == NULL)
-        {
-          coRETURN(YYERROR);
-          break;
-        }
-        
-        if (strcmp("$", argument) == 0)
-        {
-          break;
-        }
-        
-        (*lvalp).string = string_append(g_cs, argument);
-        coRETURN(ARGUMENT);
-      }
-      
-      coRETURN(ARGEND);
-      continue;
     }
     
     if (strcmp(argument, "-or") == 0)
@@ -224,8 +213,39 @@ yylex(YYSTYPE *lvalp)
       continue;
     }
     
-    (*lvalp).string = string_append(g_cs, argument);
+    if (argument[0] == '-' && argument[1] != '-')
+    {
+      goto read_function;
+    }
+    
+    coRETURN(YYERROR);
+    continue;
+    
+read_function:
+    (*lvalp).string = string_append(g_cs, argument + 1);
     coRETURN(ARGUMENT);
+
+    while (1)
+    {
+      argument = g_argv[g_index++];
+      
+      if (argument == NULL)
+      {
+        coRETURN(YYERROR);
+        break;
+      }
+      
+      if (strcmp("$", argument) == 0)
+      {
+        break;
+      }
+      
+      (*lvalp).string = string_append(g_cs, argument);
+      coRETURN(ARGUMENT);
+    }
+    
+    coRETURN(ARGEND);
+    continue;
   }
   
   coEND;
@@ -272,6 +292,36 @@ sv_exec(callspace *cs, int argv[])
 }
 
 int
+sv_spawn(callspace *cs, int argv[])
+{
+  int *array = array_get(g_cs, argv[0]);
+  int array_c = array_length(g_cs, argv[0]);
+  
+  char **fork_argv = malloc(sizeof(char*) * (array_c + 1));
+  
+  int i;
+  char *arg;
+  
+  for (i = 0; i < array_c; i++)
+  {
+    arg = string_get(g_cs, array[i]);
+
+    if (strcmp(arg, "%%") == 0)
+    {
+      fork_argv[i] = g_last_pid_str;
+    }
+    else
+    {
+      fork_argv[i] = arg;
+    }
+  }
+  
+  fork_argv[i+1] = NULL;
+  
+  return fork_spawn(array_c, fork_argv);
+}
+
+int
 sv_echo(callspace *cs, int argv[])
 {
   int *array = array_get(g_cs, argv[0]);
@@ -290,10 +340,13 @@ sv_echo(callspace *cs, int argv[])
 int
 sv_pid(callspace *cs, int argv[])
 {
+  int *array = array_get(g_cs, argv[0]);
+  int array_c = array_length(g_cs, argv[0]);
+  
   FILE* fp = NULL;
 
   pid_t pid = 0;
-  char* f = string_get(cs, argv[0]);
+  char* f = string_get(cs, array[0]);
   
   if ((fp = fopen(f, "r")) != NULL)
   {
@@ -305,14 +358,39 @@ sv_pid(callspace *cs, int argv[])
   {
     sscanf(f, "%d", &pid);
   }
-
+  
   if (check_pid(pid) == TRUE)
   {
     g_last_pid = pid;
     sprintf(g_last_pid_str, "%d", g_last_pid);
     return TRUE;
   }
+  
+  return FALSE;
+}
 
+int
+sv_pidto(callspace *cs, int argv[])
+{
+  int *array = array_get(g_cs, argv[0]);
+  int array_c = array_length(g_cs, argv[0]);
+  
+  FILE* fp = NULL;
+
+  pid_t pid = 0;
+  char* f = string_get(cs, array[0]);
+  
+  if ((fp = fopen(f, "w")) != NULL)
+  {
+    fprintf(fp, "%d\n", g_last_pid);
+    fclose(fp);
+    return TRUE;
+  }
+  else
+  {
+    fprintf(stderr, "%s: Unable to open %s - %s\n", program_name, f, strerror(errno));
+  }
+  
   return FALSE;
 }
 

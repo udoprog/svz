@@ -1,0 +1,5 @@
+ - stale command which checks the following:
+   . pid file does not exist - Creates pidfile and sends the last parsed pid into it, eval TRUE
+   . pid file exists, pid is not running - Recreate pidfile, send last pid into it, eval TRUE
+   . pid file exists, pid IS running - do nothing, eval FALSE
+ - move check for existing function into supervize.c (from parser.y)

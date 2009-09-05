@@ -1,7 +1,8 @@
 GCC=gcc
+TESTV=valgrind
 
 all: parser.tab.c stack.c
-	$(GCC) -g parser.tab.c stack.c supervize.c -o svz
+	$(GCC) -g parser.tab.c frun.c stack.c supervize.c -o svz
 
 parser: parser.tab.c
 
@@ -13,9 +14,16 @@ clean:
 	$(RM) parser.tab.h
 	$(RM) svz
 
-tests: stack-test
+tests: stack-test frun-test
 
 stack-test:
 	$(GCC) -g stack.c stack.main.c -o $@
-	valgrind -v ./$@
+	-$(TESTV) -v ./$@
+	-./$@
+	$(RM) $@
+
+frun-test:
+	$(GCC) -g frun.c frun.main.c -o $@
+	-$(TESTV) -v ./$@
+	-./$@
 	$(RM) $@
