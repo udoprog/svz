@@ -39,47 +39,41 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     ECHO = 258,
-     EXEC = 259,
-     SPAWN = 260,
-     PID = 261,
-     WHEN = 262,
-     DO = 263,
-     ELSE = 264,
-     AND = 265,
-     OR = 266,
-     NOT = 267,
-     ARGEND = 268,
-     ARGUMENT = 269
+     WHEN = 258,
+     DO = 259,
+     ELSE = 260,
+     AND = 261,
+     OR = 262,
+     NOT = 263,
+     ARGEND = 264,
+     SEP = 265,
+     ARGUMENT = 266
    };
 #endif
 /* Tokens.  */
-#define ECHO 258
-#define EXEC 259
-#define SPAWN 260
-#define PID 261
-#define WHEN 262
-#define DO 263
-#define ELSE 264
-#define AND 265
-#define OR 266
-#define NOT 267
-#define ARGEND 268
-#define ARGUMENT 269
+#define WHEN 258
+#define DO 259
+#define ELSE 260
+#define AND 261
+#define OR 262
+#define NOT 263
+#define ARGEND 264
+#define SEP 265
+#define ARGUMENT 266
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 13 "parser.y"
+#line 13 "src/parser.y"
 {
   int proc;
   int string;
   int array;
 }
 /* Line 1489 of yacc.c.  */
-#line 83 "parser.tab.h"
+#line 77 "src/parser.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

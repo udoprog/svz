@@ -1,6 +1,7 @@
 #ifndef _SUPERVIZE_H_
 #define _SUPERVIZE_H_
 
+#include <stdio.h>
 #include "stack.h"
 #include "frun.h"
 
@@ -31,6 +32,7 @@ extern int g_last_pid;
 extern char *g_program_name;
 extern char g_last_pid_str[];
 extern int g_mode;
+extern FILE *g_fp;
 
 extern frun_option g_functions[];
 

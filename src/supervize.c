@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "stack.h"
 #include "frun.h"
@@ -27,7 +28,6 @@ callspace *g_cs;
 char *g_program_name;
 char *argument;
 
-char *g_shell;
 int g_status;
 int g_mode;
 
@@ -35,6 +35,7 @@ char *g_command_string;
 pid_t g_last_pid;
 char g_last_pid_str[256];
 char *g_supervize_file;
+FILE *g_fp;
 
 void
 print_help(void)
@@ -189,6 +190,36 @@ load_module(callspace *g_cs, svz_module *mod)
   while (c-- > 0);
 }
 
+void
+read_opts(int argc, char *argv[])
+{
+  char c;
+  
+  opterr = 0;
+  
+  while ((c = getopt (argc, argv, "i:")) != -1)
+  {
+    switch (c)
+    {
+    case 'i':
+      g_fp = fopen(optarg, "r");
+      
+      if (g_fp == NULL)
+      {
+        return;
+      }
+      
+      dprintf("opening file: %s\n", optarg);
+      g_mode = STDIN;
+      break;
+    case '?':
+      return;
+    default:
+      return;
+    }
+  }
+}
+
 /**
  * supervize a program by checking specific arguments and executing actions if they are not true.
  */
@@ -199,30 +230,26 @@ int main(int argc, char *argv[])
   int i;
   g_program_name = argv[0];
   
+  g_fp = stdin;
+  
   g_cs = create_callspace();
   g_cs->global = &g_global;
   
   load_module(g_cs, &core_module);
   
-  g_index = 1;
   g_argv = argv;
 
   g_command_string = malloc(COMMAND_MAX);
   g_last_pid = 0;
   strcpy(g_last_pid_str, "0");
   
-  g_shell = (void *)getenv("SHELL");
+  read_opts(argc, argv);
   
+  g_index = optind;
   /* set mode to stdin when we don't have any arguments */
-  if (argc < 2)
+  if (argc - g_index < 1)
   {
     g_mode = STDIN;
-  }
-  
-  if (g_shell == NULL)
-  {
-    fprintf(stderr, "%s: SHELL environment variable not set\n", g_program_name);
-    return 1;
   }
   
   yyparse();

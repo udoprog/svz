@@ -15,12 +15,18 @@
 #define YYERROR -1
 
 #define coBEGIN     static int state = 0; switch (state) { case 0:
-#define coRETURN(v) { state = __LINE__; return v; case __LINE__:; } while(0);
+#define coRETURN(v) { state = __LINE__; return (v); case __LINE__:; } while(0);
 #define coEND       }
 
-#define dprintf(...) fprintf(stderr, __VA_ARGS__);
+#define check_eof(c)      do {if (c <= 0 || _lexer_pos > LEXER_BUFFER_MAX) {return NULL;}} while(0);
+#define append_buffer(c)  do { _lexer_buffer[ _lexer_pos++ ] = c; } while(0);
+
+#define dprintf(...) fprintf(stderr, "LEXER: " __VA_ARGS__);
+
+#ifndef _DEBUG
 #undef dprintf
 #define dprintf(...)
+#endif
 
 char **g_argv;
 int g_index;
@@ -41,7 +47,7 @@ _get_argument()
   {
     if (g_mode == CLI)
     {
-      dprintf("LEXER: returning argument: %s\n", g_argv[g_index]);
+      dprintf("returning argument: %s\n", g_argv[g_index]);
       coRETURN(g_argv[g_index++]);
     }
     else
@@ -49,30 +55,60 @@ _get_argument()
       char c;
       _lexer_pos = 0;
       
-      dprintf("LEXER: flushing whitespace\n");
+      dprintf("flushing whitespace\n");
       do
       {
-        c = fgetc(stdin);
-        if (c <= 0) return NULL;
+        c = fgetc(g_fp);
+        check_eof(c);
       } while (isspace(c));
       
-      dprintf("LEXER: reading characters\n");
-      do
+      
+      dprintf("flushing comments\n");
+      if (c == '#')
       {
-        _lexer_buffer[_lexer_pos++] = c;
-        c = fgetc(stdin);
-        if (c <= 0) break;
-        if (_lexer_pos > LEXER_BUFFER_MAX) return NULL;
-      } while (!isspace(c));
+        while ((c = fgetc(g_fp)) != '\n')
+        {
+          check_eof(c);
+        }
+        
+        continue;
+      }
       
-      if (_lexer_pos == 0) return NULL;
+      if (c == '"')
+      {
+        dprintf("reading string\n");
+        
+        while ((c = fgetc(g_fp)) != '"')
+        {
+          check_eof(c);
+          append_buffer(c);
+        }
+        
+        // ignore last
+        append_buffer('\0');
+        
+        dprintf("returning argument: %s\n", _lexer_buffer);
+        coRETURN(_lexer_buffer);
+        continue;
+      }
       
-      _lexer_buffer[_lexer_pos++] = '\0';
-      _lexer_pos = 0;
+      // append trailing character (to improve clarity)
+      append_buffer(c);
+
+      dprintf("reading characters\n");
+      while (!isspace(c = fgetc(g_fp)))
+      {
+        append_buffer(c);
+        check_eof(c);
+      }
       
-      dprintf("LEXER: returning argument: %s\n", _lexer_buffer);
+      append_buffer('\0');
+      
+      dprintf("returning argument: %s\n", _lexer_buffer);
       coRETURN(_lexer_buffer);
     }
+    
+    continue;
   }
   coEND;
 }
@@ -85,7 +121,7 @@ yylex(YYSTYPE *lvalp)
   
   while (1)
   {
-    dprintf("LEXER: state = begin\n");
+    dprintf("state = begin\n");
     argument = _get_argument();
     
     if (argument == NULL)
@@ -140,13 +176,19 @@ yylex(YYSTYPE *lvalp)
     {
       goto read_function;
     }
+
+    if (argument[0] == '-' && argument[1] == '-')
+    {
+      coRETURN(SEP);
+      continue;
+    }
     
     coRETURN(YYERROR);
     continue;
     
 read_function:;
-    dprintf("LEXER: state = read_function\n");
-    
+    dprintf("state = read_function\n");
+
     globals *global = (globals *)g_cs->global;
     
     frun_option *func = frun_get(global->functions, argument + 1);
@@ -164,6 +206,8 @@ read_function:;
     /* read variadic amound of arguments */
     if (func->argc == -1)
     {
+      dprintf("...variadic arguments\n");
+      
       while (1)
       {
         argument = _get_argument();
@@ -187,6 +231,8 @@ read_function:;
       coRETURN(ARGEND);
       continue;
     }
+    
+    dprintf("...fixed arguments\n");
     
     int args = func->argc;
     
