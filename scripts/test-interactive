@@ -1,0 +1,3 @@
+#!./svz -i
+-echo test this shit $
+-echo FUCK YOU $
