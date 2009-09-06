@@ -2,7 +2,7 @@
 
 #include "frun.h"
 
-int test_f(int argc, int argv[])
+int test_f(void *, int argc, int argv[])
 {
   printf("FRUN OK\n");
 }
@@ -14,12 +14,12 @@ frun_option functions[] = {
 
 int main()
 {
-  int (*func)(int, int*);
+  frun_option *func;
   func = frun_get(functions, "test");
   
-  if (func != NULL)
+  if (func->func != NULL)
   {
-    func(0, NULL);
+    func->func(NULL, 0, NULL);
   }
   else
   {

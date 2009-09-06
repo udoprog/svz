@@ -26,7 +26,6 @@ typedef struct {
 } globals;
 
 extern callspace* g_cs;
-extern globals g_global;
 
 extern int g_last_pid;
 extern char *g_program_name;

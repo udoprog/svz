@@ -116,18 +116,21 @@ array_append(callspace *cs, int ar_id, int str_id)
 int*
 array_get(callspace *cs, int ar_id)
 {
+  assert(ar_id < cs->a_pos && ar_id >= 0);
   return cs->arrays[ar_id].elements;
 }
 
 int
 array_length(callspace *cs, int ar_id)
 {
+  assert(ar_id < cs->a_pos && ar_id >= 0);
   return cs->arrays[ar_id].e_pos;
 }
 
 void
 array_destroy(callspace *cs, int ar_id)
 {
+  assert(ar_id < cs->a_pos && ar_id >= 0);
   array *ary = &cs->arrays[ar_id];
   free(ary->elements);
   ary->e_pos = 0;
@@ -162,13 +165,7 @@ string_append(callspace *cs, const char *str)
 char*
 string_get(callspace *cs, int p)
 {
-  if (p < 0)
-  {
-    printf("Illegal string\n");
-    fflush(stdout);
-    return &cs->strings[0];
-  }
-  
+  assert(p < cs->s_pos && p >= 0);
   return &cs->strings[p];
 }
 
@@ -208,10 +205,6 @@ proc_append(callspace *cs, int (*func)(callspace*, int[]), int n_args, ...)
 int
 proc_run(callspace *cs, int proc_n)
 {
-  if (proc_n >= cs->p_pos)
-  {
-    return -1;
-  }
-  
+  assert(proc_n < cs->p_pos && proc_n >= 0);
   return cs->procedures[proc_n].func(cs, cs->procedures[proc_n].argv);
 }

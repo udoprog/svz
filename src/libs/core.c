@@ -13,13 +13,21 @@
 
 #define PROC_PID "/proc/%d/stat"
 
-const frun_option core_functions[] = 
+#define dprintf(...) fprintf(stderr, "STACK: " __VA_ARGS__)
+
+#ifndef _DEBUG
+#undef dprintf
+#define dprintf(...)
+#endif
+
+static const frun_option core_functions[] = 
 {
-  {.func = sv_exec,   .name = "exec",   .argc = -1},
-  {.func = sv_spawn,  .name = "spawn",  .argc = -1},
-  {.func = sv_echo,   .name = "echo",   .argc = -1},
-  {.func = sv_pid,    .name = "pid",    .argc = 1},
-  {.func = sv_pidto,  .name = "pidto",  .argc = 1},
+  {.func = sv_spawn,        .name = "spawn",  .argc = -1},
+  {.func = sv_exec,         .name = "exec",   .argc = -1},
+  {.func = sv_echo,         .name = "echo",   .argc = -1},
+  {.func = sv_pid,          .name = "pid",    .argc = 1},
+  {.func = sv_pidto,        .name = "pidto",  .argc = 1},
+  {.func = sv_debug_print,  .name = "debug",  .argc = 0},
   {NULL, NULL, 0x0}
 };
 
@@ -86,7 +94,11 @@ fork_spawn(int argc, char *argv[])
       /*
        * able to execute other program.
        */
-      execvp(argv[0], argv);
+      if (setsid() >= 0)
+      {
+        execvp(argv[0], argv);
+      }
+      
       fprintf(stderr, "Unable to fork child: %s - %s\n", argv[0], strerror(errno));
       // get here when unable to exec.
       exit(1);
@@ -105,6 +117,8 @@ fork_spawn(int argc, char *argv[])
 int
 sv_spawn(callspace *cs, int argv[])
 {
+  dprintf("reached spawn...\n");
+  
   int *array = array_get(g_cs, argv[0]);
   int array_c = array_length(g_cs, argv[0]);
   
@@ -233,4 +247,30 @@ sv_exec(callspace *cs, int argv[])
   fork_argv[i+1] = NULL;
   
   return fork_exec(array_c, fork_argv);
+}
+
+int
+sv_debug_print(callspace *cs, int argv[])
+{
+  globals *global = (globals *)g_cs->global;
+  
+  frun_option *func = global->functions;
+  
+  while (func->func != NULL)
+  {
+    if (func->argc == -1)
+    {
+      printf("%s variadic arguments\n", func->name);
+    }
+    else
+    {
+      printf("%s %d argument(s)\n", func->name, func->argc);
+    }
+
+    dprintf(" - mempos: %p\n", func->func);
+    
+    func++;
+  }
+  
+  return FALSE;
 }

@@ -15,13 +15,16 @@
 
 #include "libs/core.h"
 
+#define dprintf(...) fprintf(stderr, "SVZ: " __VA_ARGS__);
+
+#ifndef _DEBUG
+#undef dprintf
 #define dprintf(...)
+#endif
 
 #define COMMAND_MAX 1024
 
-globals g_global = {
-  .f_pos = 0
-};
+globals *g_global;
 
 callspace *g_cs;
 
@@ -31,10 +34,8 @@ char *argument;
 int g_status;
 int g_mode;
 
-char *g_command_string;
 pid_t g_last_pid;
 char g_last_pid_str[256];
-char *g_supervize_file;
 FILE *g_fp;
 
 void
@@ -181,13 +182,16 @@ load_module(callspace *g_cs, svz_module *mod)
   }
   
   global->f_pos += c;
-  global->functions = realloc(global->functions, sizeof(frun_option *));
+  global->functions = realloc(global->functions, sizeof(frun_option) * global->f_pos);
   to_func = global->functions + global->f_pos - c;
   
   // iterate the list backwards and load the functions.
   do
   {
     *(to_func + c) = *(from_func + c);
+    dprintf("to_func->name = %s\n", (to_func + c)->name);
+    dprintf("to_func->func = %p\n", (to_func + c)->func);
+    dprintf("to_func->argc = %d\n", (to_func + c)->argc);
     dprintf("new to: %s; %d\n", (to_func + c)->name, (to_func + c)->argc);
   }
   while (c-- > 0);
@@ -200,7 +204,7 @@ read_opts(int argc, char *argv[])
   
   opterr = 0;
   
-  while ((c = getopt (argc, argv, "i:")) != -1)
+  while ((c = getopt (argc, argv, "i:d")) != -1)
   {
     switch (c)
     {
@@ -219,8 +223,7 @@ read_opts(int argc, char *argv[])
       print_help();
       return 1;
     case '?':
-      print_help();
-      return 1;
+      return 0;
     default:
       return 0;
     }
@@ -233,6 +236,9 @@ read_opts(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
   g_mode = CLI;
+
+  g_global = malloc(sizeof(g_global));
+  g_global->f_pos = 0;
   
   int i;
   g_program_name = argv[0];
@@ -240,13 +246,12 @@ int main(int argc, char *argv[])
   g_fp = stdin;
   
   g_cs = create_callspace();
-  g_cs->global = &g_global;
+  g_cs->global = g_global;
   
   load_module(g_cs, &core_module);
   
   g_argv = argv;
-
-  g_command_string = malloc(COMMAND_MAX);
+  
   g_last_pid = 0;
   strcpy(g_last_pid_str, "0");
   

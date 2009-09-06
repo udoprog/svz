@@ -3,6 +3,8 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+
 #include "supervize.h"
 #include "stack.h"
 #include "frun.h"
@@ -24,6 +26,7 @@
 %left AND
 %left OR
 %left NOT
+%left ARGUMENT
 
 %% /* Grammar rules and actions follow */
 
@@ -46,12 +49,11 @@ run_stmt: ARGUMENT argv ARGEND {
   frun_option *func;
   globals *global = (globals *)g_cs->global;
   func = frun_get(global->functions, string_get(g_cs, $1));
-  
+  assert(func != NULL);
   $$ = proc_append(g_cs, func->func, 1, $2);
 }
 
-argv: ARGUMENT                { $$ = array_create(g_cs);
-                                array_append(g_cs, $$, $1); }
+argv: /* nothing */           { $$ = array_create(g_cs); }
     | argv ARGUMENT           { $$ = $1; 
                                 array_append(g_cs, $$, $2); }
 ;
