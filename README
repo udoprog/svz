@@ -7,22 +7,25 @@ Therefore i wrote this small program.
 Hope you have fun with it.
 
 usage:
-  svz <if-stmt> [-do <do-stmt> [-else <else-stmt>]]
-
+  svz <if-stmt> [do <do-stmt> [else <else-stmt>]] [-- stmt ..]
+  
   This is the grammar:
   
     if-stmt   := stmt
     do-stmt   := stmt
     else-stmt := stmt
-
-    stmt := { stmt }
-    stmt |= stmt -and stmt
-    stmt |= stmt -or stmt
-    stmt |= -pid <argument>
-      TRUE if <argument> is an existing pid, otherwise FALSE
     
-    stmt |= -echo <argument> [<argument 2> [..]]
-      Echoes all arguments, is always TRUE.
-
-    stmt |= -exec <path> [<argument> [<argument 2> [..]]]
-      Executes <path> with argument list. Is TRUE if execution returns status 0, otherwise FALSE.
+    stmt := { stmt }
+    stmt |= stmt and stmt
+    stmt |= stmt or stmt
+    stmt |= -<function>
+    
+    available <function>s are:
+      pid <argument>
+        TRUE if <argument> is an existing pid, otherwise FALSE
+    
+      echo <argument> [<argument 2> [..]] $
+        Echoes all arguments, is always TRUE.
+      
+      exec <path> [<argument> [<argument 2> [..]]] $
+        Executes <path> with argument list. Is TRUE if execution returns status 0, otherwise FALSE.

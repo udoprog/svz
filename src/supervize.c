@@ -40,30 +40,33 @@ FILE *g_fp;
 void
 print_help(void)
 {
-  puts("");
-  puts("svz <if-stmt> [-do <do-stmt>] [-else <else-stmt>]");
-  puts("");
-  puts("This is the grammar:");
-  puts("");
-  puts("  if-stmt   := stmt");
-  puts("  do-stmt   := stmt");
-  puts("  else-stmt := stmt");
-  puts("");
-  puts("  stmt := { stmt }");
-  puts("  stmt |= <-not|!> stmt");
-  puts("  stmt |= stmt -and stmt");
-  puts("  stmt |= stmt -or stmt");
-  puts("  stmt |= -pid <argument>");
-  puts("    TRUE if <argument> is an existing pid, otherwise FALSE");
-  puts("");
-  puts("  stmt |= -echo argv $");
-  puts("    Echoes all arguments, is always TRUE.");
-  puts("");
-  puts("  stmt |= -exec argv $");
-  puts("    Executes <path> with argument list. Is TRUE if execution returns status 0, otherwise FALSE.");
-  puts("");
-  puts("  argv |= ARGUMENT [ARGUMENT [..]]");
-  puts("");
+  puts(
+    "\n"
+    "usage:\n"
+    "svz <if-stmt> [do <do-stmt> [else <else-stmt>]] [-- stmt ..]\n"
+    "\n"
+    "This is the grammar:\n"
+    "\n"
+    "  if-stmt   := stmt\n"
+    "  do-stmt   := stmt\n"
+    "  else-stmt := stmt\n"
+    "\n"
+    "\n"
+    "  stmt := { stmt }\n"
+    "  stmt |= stmt and stmt\n"
+    "  stmt |= stmt or stmt\n"
+    "  stmt |= -<function>\n"
+    "\n"
+    "  available <function>s are:\n"
+    "  pid <argument>\n"
+    "    TRUE if <argument> is an existing pid, otherwise FALSE\n"
+    "\n"
+    "  echo <argument> [<argument 2> [..]] $\n"
+    "    Echoes all arguments, is always TRUE.\n"
+    "\n"
+    "  exec <path> [<argument> [<argument 2> [..]]] $\n"
+    "    Executes <path> with argument list. Is TRUE if execution returns status 0, otherwise FALSE.\n"
+  );
 }
 
 int
@@ -190,7 +193,7 @@ load_module(callspace *g_cs, svz_module *mod)
   while (c-- > 0);
 }
 
-void
+int
 read_opts(int argc, char *argv[])
 {
   char c;
@@ -211,11 +214,15 @@ read_opts(int argc, char *argv[])
       
       dprintf("opening file: %s\n", optarg);
       g_mode = STDIN;
-      break;
+      return 0;
+    case 'h':
+      print_help();
+      return 1;
     case '?':
-      return;
+      print_help();
+      return 1;
     default:
-      return;
+      return 0;
     }
   }
 }
@@ -243,7 +250,10 @@ int main(int argc, char *argv[])
   g_last_pid = 0;
   strcpy(g_last_pid_str, "0");
   
-  read_opts(argc, argv);
+  if (read_opts(argc, argv))
+  {
+    return 1;
+  }
   
   g_index = optind;
   /* set mode to stdin when we don't have any arguments */
