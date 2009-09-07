@@ -1,13 +1,27 @@
-GCC=gcc
+CC=gcc
+CFLAGS=-I./src -g
 TESTV=valgrind
 
-all: src/parser.tab.c
-	$(GCC) -g -I./src src/parser.tab.c src/libs/core.c src/lexer.c src/frun.c src/stack.c src/supervize.c -o svz
+SRC=src/parser.tab.c
+SRC+=src/proc.c
+SRC+=src/lexer.c
+SRC+=src/frun.c
+SRC+=src/stack.c
+SRC+=src/supervize.c
+SRC+=src/libs/core.c
+
+OBJ=$(SRC:.c=.o)
+
+.SUFFIXES: .o .c
+
+all: $(OBJ)
+	$(CC) -g $(OBJ) -o svz
+
+.c.o:
+	$(CC) -c $(CFLAGS) $< -o $@
 
 debug:
 	$(GCC) -D_DEBUG=1 -g -I./src src/parser.tab.c src/libs/core.c src/lexer.c src/frun.c src/stack.c src/supervize.c -o svz
-
-parser: parser.tab.c
 
 src/parser.tab.c: src/parser.y
 	bison --verbose --defines=src/parser.tab.h --output=src/parser.tab.c $<
@@ -15,7 +29,7 @@ src/parser.tab.c: src/parser.y
 clean:
 	$(RM) src/parser.tab.c
 	$(RM) src/parser.tab.h
-	$(RM) svz
+	$(RM) $(SRC:.c=.o)
 
 tests: stack-test frun-test
 

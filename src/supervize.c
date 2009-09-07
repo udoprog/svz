@@ -168,10 +168,9 @@ sv_root(callspace* cs, int status, int do_proc, int else_proc)
  * load_functions will return non-zero if a function is attempted to be loaded twice.
  */
 void
-load_module(callspace *g_cs, svz_module *mod)
+load_module(globals *global, svz_module *mod)
 {
   int c = 0, i;
-  globals *global = (globals *)g_cs->global;
   frun_option *to_func;
   const frun_option *from_func = mod->functions;
   
@@ -181,20 +180,19 @@ load_module(callspace *g_cs, svz_module *mod)
     c++;
   }
   
-  global->f_pos += c;
-  global->functions = realloc(global->functions, sizeof(frun_option) * global->f_pos);
-  to_func = global->functions + global->f_pos - c;
+  global->functions = realloc(global->functions, sizeof(frun_option) * (global->f_pos + c + 1));
   
   // iterate the list backwards and load the functions.
-  do
+  for (i = 0; i < c; i++)
   {
-    *(to_func + c) = *(from_func + c);
-    dprintf("to_func->name = %s\n", (to_func + c)->name);
-    dprintf("to_func->func = %p\n", (to_func + c)->func);
-    dprintf("to_func->argc = %d\n", (to_func + c)->argc);
-    dprintf("new to: %s; %d\n", (to_func + c)->name, (to_func + c)->argc);
+    memcpy(global->functions + global->f_pos + i, from_func + i, sizeof(frun_option));
+    dprintf("to_func->name = %s\n", (to_func + i)->name);
+    dprintf("to_func->func = %p\n", (to_func + i)->func);
+    dprintf("to_func->argc = %d\n", (to_func + i)->argc);
+    dprintf("new to: %s; %d\n", (to_func + i)->name, (to_func + i)->argc);
   }
-  while (c-- > 0);
+  
+  global->f_pos += c;
 }
 
 int
@@ -228,6 +226,8 @@ read_opts(int argc, char *argv[])
       return 0;
     }
   }
+  
+  return 0;
 }
 
 /**
@@ -237,8 +237,11 @@ int main(int argc, char *argv[])
 {
   g_mode = CLI;
 
-  g_global = malloc(sizeof(g_global));
+  g_global = malloc(sizeof(globals));
   g_global->f_pos = 0;
+  g_global->functions = NULL;
+  
+  load_module(g_global, &core_module);
   
   int i;
   g_program_name = argv[0];
@@ -248,8 +251,6 @@ int main(int argc, char *argv[])
   g_cs = create_callspace();
   g_cs->global = g_global;
   
-  load_module(g_cs, &core_module);
-  
   g_argv = argv;
   
   g_last_pid = 0;
@@ -257,6 +258,7 @@ int main(int argc, char *argv[])
   
   if (read_opts(argc, argv))
   {
+    printf("bad read opts?\n");
     return 1;
   }
   

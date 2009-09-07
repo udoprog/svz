@@ -1,7 +1,3 @@
-#include "libs/core.h"
-#include "frun.h"
-#include "supervize.h"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -10,6 +6,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+
+#include "libs/core.h"
+#include "frun.h"
+#include "supervize.h"
+#include "proc.h"
 
 #define PROC_PID "/proc/%d/stat"
 
@@ -28,6 +29,7 @@ static const frun_option core_functions[] =
   {.func = sv_pid,          .name = "pid",    .argc = 1},
   {.func = sv_pidto,        .name = "pidto",  .argc = 1},
   {.func = sv_debug_print,  .name = "debug",  .argc = 0},
+  {.func = sv_cpu,          .name = "cpu",    .argc = 1},
   {NULL, NULL, 0x0}
 };
 
@@ -162,16 +164,13 @@ sv_echo(callspace *cs, int argv[])
   return TRUE;
 }
 
-int
-sv_pid(callspace *cs, int argv[])
-{
-  int *array = array_get(g_cs, argv[0]);
-  int array_c = array_length(g_cs, argv[0]);
   
+pid_t
+pid_from_string(const char *f)
+{
   FILE* fp = NULL;
-
+  
   pid_t pid = 0;
-  char* f = string_get(cs, array[0]);
   
   if ((fp = fopen(f, "r")) != NULL)
   {
@@ -184,6 +183,19 @@ sv_pid(callspace *cs, int argv[])
     sscanf(f, "%d", &pid);
   }
   
+  return pid;
+}
+
+int
+sv_pid(callspace *cs, int argv[])
+{
+  int *array = array_get(g_cs, argv[0]);
+  int array_c = array_length(g_cs, argv[0]);
+  
+  char* f = string_get(cs, array[0]);
+  
+  pid_t pid = pid_from_string(string_get(cs, array[0]));
+  
   if (check_pid(pid) == TRUE)
   {
     g_last_pid = pid;
@@ -192,6 +204,19 @@ sv_pid(callspace *cs, int argv[])
   }
   
   return FALSE;
+}
+
+int
+sv_cpu(callspace *cs, int argv[])
+{
+  int *array = array_get(g_cs, argv[0]);
+  int array_c = array_length(g_cs, argv[0]);
+  
+  char* f = string_get(cs, array[0]);
+  
+  pid_t pid = pid_from_string(string_get(cs, array[0]));
+  
+  return proc_pid_cpu(pid);
 }
 
 int

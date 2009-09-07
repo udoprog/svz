@@ -5,6 +5,7 @@
 #include "frun.h"
 #include "supervize.h"
 
+int sv_cpu(callspace*, int argv[]);
 int sv_exec(callspace*, int argv[]);
 int sv_spawn(callspace*, int argv[]);
 int sv_echo(callspace*, int argv[]);
