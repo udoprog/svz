@@ -23,9 +23,7 @@
 %type <proc> stmt run_stmt
 %type <array> argv
 
-%left AND
-%left OR
-%left NOT
+%left AND OR NOT
 %left ARGUMENT
 
 %% /* Grammar rules and actions follow */

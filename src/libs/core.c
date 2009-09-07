@@ -29,7 +29,7 @@ static const frun_option core_functions[] =
   {.func = sv_pid,          .name = "pid",    .argc = 1},
   {.func = sv_pidto,        .name = "pidto",  .argc = 1},
   {.func = sv_debug_print,  .name = "debug",  .argc = 0},
-  {.func = sv_cpu,          .name = "cpu",    .argc = 1},
+  {.func = sv_cpu,          .name = "cpu",    .argc = 3},
   {NULL, NULL, 0x0}
 };
 
@@ -211,12 +211,35 @@ sv_cpu(callspace *cs, int argv[])
 {
   int *array = array_get(g_cs, argv[0]);
   int array_c = array_length(g_cs, argv[0]);
+
+  char *f = string_get(cs, array[0]);
+  char *gte = string_get(cs, array[1]);
+  char *lte = string_get(cs, array[2]);
+
+  unsigned int i_gte = 0, i_lte = 0;
   
-  char* f = string_get(cs, array[0]);
+  if (sscanf(gte, "%u", &i_gte) != 1 || i_gte <= 0 || i_gte > 100)
+  {
+    fprintf(stderr, "cpu: bad argument #2; expected integer in range 1-100, not %u\n", i_gte);
+    return FALSE;
+  }
+  
+  if (sscanf(lte, "%u", &i_lte) != 1 || i_lte <= 0 || i_lte > 100)
+  {
+    fprintf(stderr, "cpu: bad argument #3; expected integer in range 1-100, not %u\n", i_lte);
+    return FALSE;
+  }
+
+  i_lte *= 100;
+  i_gte *= 100;
   
   pid_t pid = pid_from_string(string_get(cs, array[0]));
   
-  return proc_pid_cpu(pid);
+  unsigned int cpu = proc_pid_cpu(pid);
+
+  printf("actual cpu: %u\n", cpu);
+  
+  return cpu >= i_gte && cpu <= i_lte ? TRUE : FALSE;
 }
 
 int

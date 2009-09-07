@@ -135,7 +135,7 @@ yylex(YYSTYPE *lvalp)
       coRETURN(OR);
       continue;
     }
-
+    
     if (strcmp(argument, "!") == 0 || strcmp(argument, "not") == 0)
     {
       coRETURN(NOT);

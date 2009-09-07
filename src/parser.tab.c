@@ -434,8 +434,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    33,    33,    34,    37,    38,    39,    41,    42,    43,
-      44,    45,    48,    56,    57
+       0,    31,    31,    32,    35,    36,    37,    39,    40,    41,
+      42,    43,    46,    54,    55
 };
 #endif
 
@@ -497,13 +497,13 @@ static const yytype_int8 yypact[] =
 {
        7,     7,    -5,     7,     1,    -5,     2,    -5,    -5,    -4,
       -3,    -5,     7,     7,     7,     7,    -5,    -5,    -5,    -5,
-      18,    13,    -5,     7,    10
+      18,    -5,    -5,     7,    10
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -5,    -5,     9,    -1,    -5,    -5
+      -5,    -5,     8,    -1,    -5,    -5
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -515,14 +515,14 @@ static const yytype_uint8 yytable[] =
 {
        8,    11,    10,    14,    15,    16,    13,    17,    14,    15,
       18,    12,    20,    21,    22,     1,    14,    15,     2,     3,
-      15,    19,    24,    23,    14,    15
+      19,     0,    24,    23,    14,    15
 };
 
-static const yytype_uint8 yycheck[] =
+static const yytype_int8 yycheck[] =
 {
        1,     0,     3,     6,     7,     9,     4,    11,     6,     7,
       13,    10,    13,    14,    15,     8,     6,     7,    11,    12,
-       7,    12,    23,     5,     6,     7
+      12,    -1,    23,     5,     6,     7
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -1344,56 +1344,56 @@ yyreduce:
         case 4:
 
 /* Line 1455 of yacc.c  */
-#line 37 "src/parser.y"
+#line 35 "src/parser.y"
     {sv_root(g_cs, proc_run(g_cs, (yyvsp[(1) - (5)].proc)), (yyvsp[(3) - (5)].proc), (yyvsp[(5) - (5)].proc));;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 38 "src/parser.y"
+#line 36 "src/parser.y"
     {sv_root(g_cs, proc_run(g_cs, (yyvsp[(1) - (3)].proc)), (yyvsp[(3) - (3)].proc), -1);;}
     break;
 
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 39 "src/parser.y"
+#line 37 "src/parser.y"
     {sv_root(g_cs, proc_run(g_cs, (yyvsp[(1) - (1)].proc)), -1, -1);;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 41 "src/parser.y"
+#line 39 "src/parser.y"
     {(yyval.proc) = proc_append(g_cs, sv_stmt_not, 1, (yyvsp[(2) - (2)].proc));;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 43 "src/parser.y"
+#line 41 "src/parser.y"
     {(yyval.proc) = (yyvsp[(2) - (3)].proc);}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 44 "src/parser.y"
+#line 42 "src/parser.y"
     {(yyval.proc) = proc_append(g_cs, sv_stmt_and, 2, (yyvsp[(1) - (3)].proc), (yyvsp[(3) - (3)].proc));;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 45 "src/parser.y"
+#line 43 "src/parser.y"
     {(yyval.proc) = proc_append(g_cs, sv_stmt_or, 2, (yyvsp[(1) - (3)].proc), (yyvsp[(3) - (3)].proc));;}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 48 "src/parser.y"
+#line 46 "src/parser.y"
     {
   frun_option *func;
   globals *global = (globals *)g_cs->global;
@@ -1406,14 +1406,14 @@ yyreduce:
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 56 "src/parser.y"
+#line 54 "src/parser.y"
     { (yyval.array) = array_create(g_cs); ;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 57 "src/parser.y"
+#line 55 "src/parser.y"
     { (yyval.array) = (yyvsp[(1) - (2)].array); 
                                 array_append(g_cs, (yyval.array), (yyvsp[(2) - (2)].string)); ;}
     break;

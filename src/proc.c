@@ -240,17 +240,21 @@ proc_total(proc_base *pb)
     pb->cpu->nice +
     pb->cpu->system +
     pb->cpu->idle +
-    pb->cpu->iowait + 
+    pb->cpu->iowait;/* + 
     pb->cpu->irq + 
     pb->cpu->softirq + 
     pb->cpu->steal + 
-    pb->cpu->guest;
+    pb->cpu->guest;*/
 }
 
 long unsigned int
 proc_pid_total(proc_pid *pp)
 {
-  return pp->cpu->u_time + pp->cpu->s_time;
+  return 
+    pp->cpu->u_time +
+    pp->cpu->s_time +
+    pp->cpu->cu_time +
+    pp->cpu->cs_time;
 }
 
 unsigned int
